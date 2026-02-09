@@ -7,16 +7,19 @@ exports.register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
-    const existingUser = await User.findOne({ email });
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
+    const existingUser = await User.findOne({ email: cleanEmail });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(cleanPassword, 10);
 
     const user = await User.create({
       name,
-      email,
+      email: cleanEmail,
       password: hashedPassword,
       role: role || "student",
     });
@@ -26,6 +29,7 @@ exports.register = async (req, res) => {
       userId: user._id,
     });
   } catch (error) {
+    console.error("REGISTER ERROR:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -33,14 +37,21 @@ exports.register = async (req, res) => {
 // ================= LOGIN =================
 exports.login = async (req, res) => {
   try {
+    console.log("LOGIN BODY:", req.body);
+
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
+    const user = await User.findOne({ email: cleanEmail });
+
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(cleanPassword, user.password);
+
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
@@ -61,9 +72,7 @@ exports.login = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("LOGIN ERROR:", error);
     res.status(500).json({ message: error.message });
   }
 };
-
-
-
