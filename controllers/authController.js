@@ -34,12 +34,16 @@ exports.register = async (req, res) => {
   }
 };
 
-// ================= LOGIN =================
 exports.login = async (req, res) => {
   try {
     console.log("LOGIN BODY:", req.body);
 
     const { email, password } = req.body;
+
+    // safety check
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password required" });
+    }
 
     const cleanEmail = email.trim().toLowerCase();
     const cleanPassword = password.trim();
@@ -76,3 +80,4 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
